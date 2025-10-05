@@ -33,7 +33,7 @@ export const getUserStats = async () => {
 		prisma.listing.count(),
 		prisma.comment.count(),
 	]);
-	
+
 	return {
 		usersCount,
 		listingsCount,
@@ -46,4 +46,37 @@ export const getUserStats = async () => {
 			}
 		})
 	};
+};
+
+export const getAllUsers = async () => {
+	return prisma.user.findMany({
+		select: {
+			id: true,
+			email: true,
+			role: true,
+			createdAt: true,
+			updatedAt: true,
+		},
+		orderBy: { createdAt: 'desc' }
+	});
+};
+
+export const deleteUserCascade = async (userId: string) => {
+	return await prisma.$transaction(async (tx) => {
+		await tx.favorite.deleteMany({ where: { userId } });
+		await tx.comment.deleteMany({ where: { authorId: userId } });
+
+		const listings = await tx.listing.findMany({ where: { authorId: userId }, select: { id: true } });
+		const listingIds = listings.map(l => l.id);
+
+		if (listingIds.length > 0) {
+			await tx.favorite.deleteMany({ where: { announcementId: { in: listingIds } } });
+			await tx.comment.deleteMany({ where: { announcementId: { in: listingIds } } });
+			await tx.listing.deleteMany({ where: { id: { in: listingIds } } });
+		}
+
+		await tx.user.delete({ where: { id: userId } });
+
+		return { success: true };
+	});
 };

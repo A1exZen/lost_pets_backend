@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from "express";
+import { NextFunction, Request, Response } from "express";
 import { z } from "zod";
 
 const registerSchema = z.object({
@@ -16,7 +16,8 @@ const createListingSchema = z.object({
 	description: z.string().min(1, "Description is required").max(1000, "Description too long"),
 	animalType: z.string().min(1, "Animal type is required"),
 	location: z.string().min(1, "Location is required"),
-	dateLost: z.date(),
+	// Accept string from multipart/form-data and coerce to Date
+	dateLost: z.coerce.date({ invalid_type_error: "Invalid date" }),
 	contactPhone: z.string().min(10, "Phone number is required"),
 	breed: z.string().optional(),
 });
@@ -64,7 +65,9 @@ export const validateLogin = (req: Request, res: Response, next: NextFunction) =
 
 export const validateCreateListing = (req: Request, res: Response, next: NextFunction) => {
 	try {
-		createListingSchema.parse(req.body);
+		const parsed = createListingSchema.parse(req.body);
+		// apply parsed values (e.g., dateLost: Date) back onto request body
+		req.body = parsed as any;
 		next();
 	} catch (error) {
 		if (error instanceof z.ZodError) {

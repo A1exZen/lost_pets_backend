@@ -1,6 +1,7 @@
-import { NextFunction, Request, Response } from "express";
-import { deleteUserCascade, getAllUsers, getUserById, getUserListings, getUserStats, updateUserRole } from "../services/userService";
-
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getStats = exports.getUserData = exports.updateUser = exports.getProfile = void 0;
+const userService_1 = require("../services/userService");
 /**
  * @swagger
  * components:
@@ -21,7 +22,6 @@ import { deleteUserCascade, getAllUsers, getUserById, getUserListings, getUserSt
  *           type: string
  *           format: date-time
  */
-
 /**
  * @swagger
  * /api/users/profile:
@@ -42,18 +42,19 @@ import { deleteUserCascade, getAllUsers, getUserById, getUserListings, getUserSt
  *       404:
  *         description: Пользователь не найден
  */
-export const getProfile = async (req: Request, res: Response, next: NextFunction) => {
-	try {
-		const result = await getUserById(req.user!.userId);
-		if (!result) {
-			return res.status(404).json({ error: "User not found" });
-		}
-		res.status(200).json(result);
-	} catch (error) {
-		next(error);
-	}
+const getProfile = async (req, res, next) => {
+    try {
+        const result = await (0, userService_1.getUserById)(req.user.userId);
+        if (!result) {
+            return res.status(404).json({ error: "User not found" });
+        }
+        res.status(200).json(result);
+    }
+    catch (error) {
+        next(error);
+    }
 };
-
+exports.getProfile = getProfile;
 /**
  * @swagger
  * /api/users/profile:
@@ -82,16 +83,17 @@ export const getProfile = async (req: Request, res: Response, next: NextFunction
  *       401:
  *         description: Не авторизован
  */
-export const updateUser = async (req: Request, res: Response, next: NextFunction) => {
-	try {
-		const { role } = req.body;
-		const result = await updateUserRole(req.user!.userId, role);
-		res.status(200).json(result);
-	} catch (error) {
-		next(error);
-	}
+const updateUser = async (req, res, next) => {
+    try {
+        const { role } = req.body;
+        const result = await (0, userService_1.updateUserRole)(req.user.userId, role);
+        res.status(200).json(result);
+    }
+    catch (error) {
+        next(error);
+    }
 };
-
+exports.updateUser = updateUser;
 /**
  * @swagger
  * /api/users/my-listings:
@@ -112,15 +114,16 @@ export const updateUser = async (req: Request, res: Response, next: NextFunction
  *       401:
  *         description: Не авторизован
  */
-export const getUserData = async (req: Request, res: Response, next: NextFunction) => {
-	try {
-		const result = await getUserListings(req.user!.userId);
-		res.status(200).json(result);
-	} catch (error) {
-		next(error);
-	}
+const getUserData = async (req, res, next) => {
+    try {
+        const result = await (0, userService_1.getUserListings)(req.user.userId);
+        res.status(200).json(result);
+    }
+    catch (error) {
+        next(error);
+    }
 };
-
+exports.getUserData = getUserData;
 /**
  * @swagger
  * /api/users/stats:
@@ -144,33 +147,13 @@ export const getUserData = async (req: Request, res: Response, next: NextFunctio
  *       401:
  *         description: Не авторизован
  */
-export const getStats = async (req: Request, res: Response, next: NextFunction) => {
-	try {
-		const result = await getUserStats();
-		res.status(200).json(result);
-	} catch (error) {
-		next(error);
-	}
+const getStats = async (req, res, next) => {
+    try {
+        const result = await (0, userService_1.getUserStats)();
+        res.status(200).json(result);
+    }
+    catch (error) {
+        next(error);
+    }
 };
-
-export const listUsers = async (req: Request, res: Response, next: NextFunction) => {
-	try {
-		const users = await getAllUsers();
-		res.status(200).json(users);
-	} catch (error) {
-		next(error);
-	}
-};
-
-export const deleteUser = async (req: Request, res: Response, next: NextFunction) => {
-	try {
-		const { id } = req.params;
-		if (id === req.user!.userId) {
-			return res.status(400).json({ error: "Нельзя удалить самого себя" });
-		}
-		await deleteUserCascade(id);
-		res.status(204).send();
-	} catch (error) {
-		next(error);
-	}
-};
+exports.getStats = getStats;

@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: pet-lost-postgres
+    environment:
+      POSTGRES_DB: petlost
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 12345
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    container_name: pet-lost-backend
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: "postgresql://postgres:12345@postgres:5432/petlost?schema=public"
+      JWT_SECRET: "39547327565ce264552e4d33b06579956ef90ca97de2cc6621da2c42f058107fe6ac793d2ea6292803394a04148045dcfc7380435b38df78e3f5786210dde26d5348591132a62c62f3843ba43584f65c13b61c594fd4ca3f9e3ff311e5ffe071d273cb3ac2ca3157ae3cbd41c17bde9745e308bdd1aecb9e535a1c2068395f30"
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+    command: >
+      sh -c "sleep 10 && 
+             npm run prisma:generate &&
+             npm run prisma:migrate &&
+             node dist/server.js"
+
+volumes:
+  postgres_data:

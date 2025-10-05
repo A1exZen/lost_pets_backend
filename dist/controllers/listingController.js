@@ -1,15 +1,7 @@
-import { NextFunction, Request, Response } from "express";
-import {
-	createListing,
-	deleteListing,
-	getFilteredListings,
-	getListingById,
-	getUserFavorites,
-	toggleFavorite,
-	updateListing
-} from "../services/listingService";
-import { CreateListingInput, FilterOptions, UpdateListingInput } from "../types";
-
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getUserFavoritesList = exports.toggleFavoriteListing = exports.search = exports.deleteL = exports.update = exports.getById = exports.create = void 0;
+const listingService_1 = require("../services/listingService");
 /**
  * @swagger
  * components:
@@ -84,7 +76,6 @@ import { CreateListingInput, FilterOptions, UpdateListingInput } from "../types"
  *           type: string
  *           format: date-time
  */
-
 /**
  * @swagger
  * /api/listings:
@@ -111,21 +102,20 @@ import { CreateListingInput, FilterOptions, UpdateListingInput } from "../types"
  *       401:
  *         description: Не авторизован
  */
-export const create = async (req: Request, res: Response, next: NextFunction) => {
-	try {
-		const input: CreateListingInput = req.body;
-
-		if (req.files && Array.isArray(req.files)) {
-			input.photos = req.files.map((file: any) => `/uploads/${file.filename}`);
-		}
-
-		const result = await createListing(input, req.user!.userId);
-		res.status(201).json(result);
-	} catch (error) {
-		next(error);
-	}
+const create = async (req, res, next) => {
+    try {
+        const input = req.body;
+        if (req.files && Array.isArray(req.files)) {
+            input.photos = req.files.map((file) => `/uploads/${file.filename}`);
+        }
+        const result = await (0, listingService_1.createListing)(input, req.user.userId);
+        res.status(201).json(result);
+    }
+    catch (error) {
+        next(error);
+    }
 };
-
+exports.create = create;
 /**
  * @swagger
  * /api/listings/{id}:
@@ -149,45 +139,46 @@ export const create = async (req: Request, res: Response, next: NextFunction) =>
  *       404:
  *         description: Объявление не найдено
  */
-export const getById = async (req: Request, res: Response, next: NextFunction) => {
-	try {
-		const { id } = req.params;
-		const result = await getListingById(id);
-		if (!result) {
-			return res.status(404).json({ error: "Listing not found" });
-		}
-		res.status(200).json(result);
-	} catch (error) {
-		next(error);
-	}
+const getById = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const result = await (0, listingService_1.getListingById)(id);
+        if (!result) {
+            return res.status(404).json({ error: "Listing not found" });
+        }
+        res.status(200).json(result);
+    }
+    catch (error) {
+        next(error);
+    }
 };
-
-export const update = async (req: Request, res: Response, next: NextFunction) => {
-	try {
-		const { id } = req.params;
-		const input: UpdateListingInput = req.body;
-
-		if (req.files && Array.isArray(req.files)) {
-			input.photos = req.files.map((file: any) => `/uploads/${file.filename}`);
-		}
-
-		const result = await updateListing(id, input, req.user!.userId);
-		res.status(200).json(result);
-	} catch (error) {
-		next(error);
-	}
+exports.getById = getById;
+const update = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const input = req.body;
+        if (req.files && Array.isArray(req.files)) {
+            input.photos = req.files.map((file) => `/uploads/${file.filename}`);
+        }
+        const result = await (0, listingService_1.updateListing)(id, input, req.user.userId);
+        res.status(200).json(result);
+    }
+    catch (error) {
+        next(error);
+    }
 };
-
-export const deleteL = async (req: Request, res: Response, next: NextFunction) => {
-	try {
-		const { id } = req.params;
-		await deleteListing(id);
-		res.status(204).send();
-	} catch (error) {
-		next(error);
-	}
+exports.update = update;
+const deleteL = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        await (0, listingService_1.deleteListing)(id);
+        res.status(204).send();
+    }
+    catch (error) {
+        next(error);
+    }
 };
-
+exports.deleteL = deleteL;
 /**
  * @swagger
  * /api/listings/search:
@@ -239,39 +230,42 @@ export const deleteL = async (req: Request, res: Response, next: NextFunction) =
  *               items:
  *                 $ref: '#/components/schemas/Listing'
  */
-export const search = async (req: Request, res: Response, next: NextFunction) => {
-	try {
-		const filters: FilterOptions = {
-			animalType: req.query.animalType as string,
-			location: req.query.location as string,
-			dateFrom: req.query.dateFrom ? new Date(req.query.dateFrom as string) : undefined,
-			dateTo: req.query.dateTo ? new Date(req.query.dateTo as string) : undefined,
-			limit: req.query.limit ? parseInt(req.query.limit as string) : 10,
-			offset: req.query.offset ? parseInt(req.query.offset as string) : 0,
-		};
-
-		const result = await getFilteredListings(filters);
-		res.status(200).json(result);
-	} catch (error) {
-		next(error);
-	}
+const search = async (req, res, next) => {
+    try {
+        const filters = {
+            animalType: req.query.animalType,
+            location: req.query.location,
+            dateFrom: req.query.dateFrom ? new Date(req.query.dateFrom) : undefined,
+            dateTo: req.query.dateTo ? new Date(req.query.dateTo) : undefined,
+            limit: req.query.limit ? parseInt(req.query.limit) : 10,
+            offset: req.query.offset ? parseInt(req.query.offset) : 0,
+        };
+        const result = await (0, listingService_1.getFilteredListings)(filters);
+        res.status(200).json(result);
+    }
+    catch (error) {
+        next(error);
+    }
 };
-
-export const toggleFavoriteListing = async (req: Request, res: Response, next: NextFunction) => {
-	try {
-		const { id } = req.params;
-		const result = await toggleFavorite(req.user!.userId, id);
-		res.status(200).json(result);
-	} catch (error) {
-		next(error);
-	}
+exports.search = search;
+const toggleFavoriteListing = async (req, res, next) => {
+    try {
+        const { listingId } = req.params;
+        const result = await (0, listingService_1.toggleFavorite)(req.user.userId, listingId);
+        res.status(200).json(result);
+    }
+    catch (error) {
+        next(error);
+    }
 };
-
-export const getUserFavoritesList = async (req: Request, res: Response, next: NextFunction) => {
-	try {
-		const result = await getUserFavorites(req.user!.userId);
-		res.status(200).json(result);
-	} catch (error) {
-		next(error);
-	}
+exports.toggleFavoriteListing = toggleFavoriteListing;
+const getUserFavoritesList = async (req, res, next) => {
+    try {
+        const result = await (0, listingService_1.getUserFavorites)(req.user.userId);
+        res.status(200).json(result);
+    }
+    catch (error) {
+        next(error);
+    }
 };
+exports.getUserFavoritesList = getUserFavoritesList;

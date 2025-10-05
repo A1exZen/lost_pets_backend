@@ -1,5 +1,5 @@
 import prisma from "../db";
-import { CreateListingInput, UpdateListingInput, FilterOptions } from "../types";
+import { CreateListingInput, FilterOptions, UpdateListingInput } from "../types";
 
 export const createListing = async (input: CreateListingInput, authorId: string) => {
 	const listing = await prisma.listing.create({
@@ -8,7 +8,7 @@ export const createListing = async (input: CreateListingInput, authorId: string)
 			authorId,
 		},
 	});
-	
+
 	return listing;
 };
 
@@ -42,7 +42,7 @@ export const updateListing = async (id: string, input: UpdateListingInput, autho
 	if (!listing || listing.authorId !== authorId) {
 		throw new Error("Listing not found or unauthorized");
 	}
-	
+
 	return await prisma.listing.update({
 		where: { id },
 		data: input,
@@ -56,23 +56,23 @@ export const deleteListing = async (id: string) => {
 
 export const getFilteredListings = async (filters: FilterOptions) => {
 	const { animalType, location, dateFrom, dateTo, limit = 10, offset = 0 } = filters;
-	
+
 	const whereClause: any = {};
-	
+
 	if (animalType) {
 		whereClause.animalType = { contains: animalType, mode: 'insensitive' };
 	}
-	
+
 	if (location) {
 		whereClause.location = { contains: location, mode: 'insensitive' };
 	}
-	
+
 	if (dateFrom || dateTo) {
 		whereClause.dateLost = {};
 		if (dateFrom) whereClause.dateLost.gte = dateFrom;
 		if (dateTo) whereClause.dateLost.lte = dateTo;
 	}
-	
+
 	const [listings, total] = await Promise.all([
 		prisma.listing.findMany({
 			where: whereClause,
@@ -90,7 +90,7 @@ export const getFilteredListings = async (filters: FilterOptions) => {
 		}),
 		prisma.listing.count({ where: whereClause })
 	]);
-	
+
 	return {
 		listings,
 		total,
@@ -109,7 +109,7 @@ export const toggleFavorite = async (userId: string, listingId: string) => {
 			}
 		}
 	});
-	
+
 	if (existingFavorite) {
 		await prisma.favorite.delete({
 			where: {
@@ -132,19 +132,14 @@ export const toggleFavorite = async (userId: string, listingId: string) => {
 };
 
 export const getUserFavorites = async (userId: string) => {
-	return await prisma.favorite.findMany({
+	const favorites = await prisma.favorite.findMany({
 		where: { userId },
 		include: {
-			announcement: {
-				include: {
-					author: {
-						select: {
-							id: true,
-							email: true,
-						}
-					}
-				}
-			}
+			announcement: true,
 		}
 	});
+	return favorites.map((f) => ({
+		...f.announcement,
+		isFavorite: true,
+	}));
 };
