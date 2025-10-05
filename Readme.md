@@ -17,7 +17,8 @@
 - Node.js + Express
 - TypeScript
 - PostgreSQL + PrismaORM
-- JWT для аутентификации
-- Multer для загрузки файлов
-- Zod для валидации
-- Docker для контейнеризации
+- JWT
+- Multer
+- Zod
+- Docker
+- Swagger docs
